@@ -1,1 +1,2 @@
+/* Hide the filter form when printing the page — only the table should print. */
 div.dokuwiki form.searchtable { display: none; }

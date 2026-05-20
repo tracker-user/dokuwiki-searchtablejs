@@ -1,14 +1,28 @@
-div.dokuwiki input.searchtable {
-	background:url("images/inputshadow.png") repeat-x scroll center top #FFFFFF;
+/*
+ * searchtablejs — filter input + reset button styling.
+ *
+ * Drops the upstream 1px shadow PNG background (Web 2.0 era look) and uses
+ * plain HTML5 form styling that inherits from the user's DokuWiki template.
+ * Result: the input matches whatever input style the active template defines,
+ * with the reset button sitting flush against it.
+ */
+div.dokuwiki form.searchtable {
+    display: block;
+    margin-bottom: 1em;
+}
+
+div.dokuwiki .searchtable-label {
+    display: inline-block;
+    margin-right: 0.4em;
 }
 
 div.dokuwiki input.searchtable {
-	background-color:#FFFFFF;
-	border:1px solid #8CACBB;
-	color:#000000;
-	display:inline;
-	font-size:100%;
-	margin:1px;
-	padding:0.2em 0.3em;
-	vertical-align:middle;
+    padding: 0.2em 0.4em;
+    vertical-align: middle;
+}
+
+div.dokuwiki button.searchtable-reset {
+    padding: 0.2em 0.6em;
+    vertical-align: middle;
+    cursor: pointer;
 }
