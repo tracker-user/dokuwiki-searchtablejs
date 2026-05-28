@@ -29,32 +29,56 @@
  * @author  Robert Henjes <robert.henjes@gmx.net> (original)
  */
 
-class syntax_plugin_searchtablejs extends DokuWiki_Syntax_Plugin
+if (!defined('DOKU_INC')) die();
+
+class syntax_plugin_searchtablejs extends \dokuwiki\Extension\SyntaxPlugin
 {
-    public function getType()
+    /** @var int Counter for unique container IDs within a single render pass */
+    private static int $idCounter = 0;
+
+    /**
+     * @return string Syntax type — 'container' allows nested markup
+     */
+    public function getType(): string
     {
         return 'container';
     }
 
-    public function getPType()
+    /**
+     * @return string Paragraph type — 'block' prevents the parser from wrapping
+     *                this plugin's <div> output in <p> tags (invalid HTML)
+     */
+    public function getPType(): string
     {
-        // Was 'normal' upstream, producing <p><div>...</div></p> (invalid HTML).
-        // 'block' tells the parser not to wrap our output in <p>.
         return 'block';
     }
 
-    public function getSort()
+    /**
+     * @return int Parser sort order
+     */
+    public function getSort(): int
     {
         return 999;
     }
 
-    /** Lets the plugin coexist with edittable and other inner-table plugins. */
-    public function getAllowedTypes()
+    /**
+     * Allowed nested markup types — lets the plugin coexist with edittable,
+     * sortablejs, and other inner-table plugins.
+     *
+     * @return string[]
+     */
+    public function getAllowedTypes(): array
     {
         return ['container', 'formatting', 'substition'];
     }
 
-    public function connectTo($mode)
+    /**
+     * Register lexer entry pattern.
+     *
+     * @param string $mode Current parser mode
+     * @return void
+     */
+    public function connectTo($mode): void
     {
         $this->Lexer->addEntryPattern(
             '<searchtable[^>]*>(?=.*?\x3C/searchtable\x3E)',
@@ -63,12 +87,26 @@ class syntax_plugin_searchtablejs extends DokuWiki_Syntax_Plugin
         );
     }
 
-    public function postConnect()
+    /**
+     * Register lexer exit pattern.
+     *
+     * @return void
+     */
+    public function postConnect(): void
     {
         $this->Lexer->addExitPattern('</searchtable>', 'plugin_searchtablejs');
     }
 
-    public function handle($match, $state, $pos, Doku_Handler $handler)
+    /**
+     * Parse a lexer match into handler data.
+     *
+     * @param string       $match   Text matched by the pattern
+     * @param int          $state   Lexer state (ENTER, UNMATCHED, EXIT)
+     * @param int          $pos     Character position of the match
+     * @param Doku_Handler $handler Active handler
+     * @return array{int, string}
+     */
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
     {
         switch ($state) {
             case DOKU_LEXER_ENTER:
@@ -86,24 +124,34 @@ class syntax_plugin_searchtablejs extends DokuWiki_Syntax_Plugin
         return [];
     }
 
-    public function render($mode, Doku_Renderer $renderer, $data)
+    /**
+     * Render the searchtable wrapper and filter form.
+     *
+     * @param string        $mode     Output format ('xhtml', etc.)
+     * @param Doku_Renderer $renderer Active renderer
+     * @param array         $data     Data returned by handle()
+     * @return bool True if format was handled
+     */
+    public function render($mode, Doku_Renderer $renderer, $data): bool
     {
         if ($mode !== 'xhtml') return false;
 
         [$state, $match] = $data;
         switch ($state) {
             case DOKU_LEXER_ENTER:
-                // mt_rand returns an int; cast for safe embedding.
-                $id = (string)mt_rand();
-                $renderer->doc .= '<div class="searchtable' . $match . '" id="' . $id . '">';
+                self::$idCounter++;
+                $id = 'searchtable_' . self::$idCounter;
+                $renderer->doc .= '<div class="searchtable' . hsc($match) . '" id="' . $id . '">';
                 $renderer->doc .=
                     '<form class="searchtable" onsubmit="return false;">'
-                    . '<label class="searchtable-label">Filter: '
+                    . '<label class="searchtable-label">' . hsc($this->getLang('filter_label')) . ' '
                     . '<input class="searchtable" name="filtertable" type="text"'
                     .   ' onkeyup="searchtable.filterall(this, \'' . $id . '\')">'
                     . '</label>'
                     . ' <button type="button" class="searchtable-reset"'
-                    .   ' onclick="searchtable.resetfilter(\'' . $id . '\')">Reset</button>'
+                    .   ' onclick="searchtable.resetfilter(\'' . $id . '\')">'
+                    .   hsc($this->getLang('reset_btn'))
+                    . '</button>'
                     . '</form>';
                 break;
 

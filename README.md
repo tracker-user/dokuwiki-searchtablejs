@@ -37,6 +37,11 @@ Original plugin: [github.com/xdreamer/searchtablejs](https://github.com/xdreamer
 | `script.js` rewritten in an IIFE with strict mode; behavior preserved | Modernized. No trailing-comma object literal issue (which the upstream README notes broke IE8 — IE8 is no longer relevant, but a clean rewrite is easier to maintain). Filter functions retain their original signatures (`filterall`, `filtersingle`, `filterwords`) so any custom HTML using them still works. |
 | `style.css` simplified | Dropped the upstream `inputshadow.png` background (Web 2.0 era look). The input now inherits styling from the active DokuWiki template. The Reset button gets minimal padding/cursor styling. |
 | `plugin.info.txt` `date` field set to `2077-06-12` | Suppresses the **Update** button in the Extension Manager so another admin can't accidentally overwrite this fork with upstream. |
+| `syntax.php`: tag attributes escaped with `hsc()` | Fixes a stored XSS: an editor could inject event handlers by writing `<searchtable " onmouseover="alert(1)>`. |
+| Base class updated to `\dokuwiki\Extension\SyntaxPlugin` | Uses the modern namespaced form instead of the `DokuWiki_Syntax_Plugin` legacy alias. |
+| Return types and parameter types added to all public methods | PHP 8.3 style; aids static analysis. |
+| Static `$idCounter` replaces `mt_rand()` for container IDs | Deterministic, no collision risk; IDs are now `searchtable_1`, `searchtable_2`, etc. |
+| `lang/` directory added (en, de, ru, ja) | "Filter:" and "Reset" labels are now translatable via `$this->getLang()`. |
 
 ## Install
 

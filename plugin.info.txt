@@ -2,6 +2,6 @@ base   searchtablejs
 author Robert Henjes, TrackerUser
 email  robert.henjes@gmx.net
 date   2077-06-12
-name   Searchtablejs Plugin
-desc   Use searchtablejs for quick filtering DokuWiki tables (local fork — Update suppressed)
+name   SearchTableJS
+desc   Use SearchTableJS for quick filtering DokuWiki tables (local fork — Update suppressed)
 url    https://github.com/tracker-user/dokuwiki-searchtablejs
