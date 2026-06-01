@@ -11,6 +11,8 @@
    - Wrapped in an IIFE to avoid leaking helper vars; the global `searchtable`
      object is still exposed because inline onclick/onkeyup handlers in the
      emitted HTML reference it.
+   - Replaced stripTags(innerHTML) with native .textContent — faster, avoids
+     manual regex, and correctly handles HTML entities.
 */
 (function () {
     'use strict';
@@ -30,10 +32,6 @@
         }
     }
 
-    function stripTags(html) {
-        return html.replace(/<[^>]+>/g, '');
-    }
-
     window.searchtable = {
         /** Filter on one specific cell column. */
         filtersingle: function (term, id, cellNr) {
@@ -43,7 +41,7 @@
             visibleRowsLoop(table, function (row) {
                 var cell = row.cells[cellNr];
                 if (!cell) return false;
-                return stripTags(cell.innerHTML).toLowerCase().indexOf(needle) >= 0;
+                return cell.textContent.toLowerCase().indexOf(needle) >= 0;
             });
         },
 
@@ -53,7 +51,7 @@
             if (!table) return;
             var words = (term.value || '').toLowerCase().split(' ');
             visibleRowsLoop(table, function (row) {
-                var text = stripTags(row.innerHTML).toLowerCase();
+                var text = row.textContent.toLowerCase();
                 for (var i = 0; i < words.length; i++) {
                     if (text.indexOf(words[i]) < 0) return false;
                 }
@@ -67,7 +65,7 @@
             if (!table) return;
             var needle = (term.value || '').toLowerCase();
             visibleRowsLoop(table, function (row) {
-                return stripTags(row.innerHTML).toLowerCase().indexOf(needle) >= 0;
+                return row.textContent.toLowerCase().indexOf(needle) >= 0;
             });
         },
 

@@ -24,6 +24,17 @@
  *   5. Removed the bundled Eclipse `.project` file and the unused
  *      `TableFilter_EN/` directory (3rd-party reference code that wasn't
  *      referenced from anywhere in this plugin).
+ *   6. Sliced document_start/document_end from the p_get_instructions() list in
+ *      the xhtml UNMATCHED branch. Replaying those instructions onto the live page
+ *      renderer prematurely flushed the footnotes <div> and drained section-edit
+ *      markers whenever non-table text appeared inside <searchtable> on a page
+ *      that also had footnotes or multiple sections (duplicate IDs, misplaced
+ *      markup). Mirrors the fix applied to the sortablejs sibling.
+ *   7. handle() fallback now returns [$state, ''] instead of [] to avoid
+ *      undefined-index warnings if an unexpected lexer state is ever passed.
+ *   8. $idCounter promoted to protected (DokuWiki convention for subclassability).
+ *   9. script.js: replaced stripTags(innerHTML) with native .textContent
+ *      (faster, avoids manual regex, handles HTML entities correctly).
  *
  * @license GPL 2 (http://www.gnu.org/licenses/gpl.html)
  * @author  Robert Henjes <robert.henjes@gmx.net> (original)
@@ -34,7 +45,7 @@ if (!defined('DOKU_INC')) die();
 class syntax_plugin_searchtablejs extends \dokuwiki\Extension\SyntaxPlugin
 {
     /** @var int Counter for unique container IDs within a single render pass */
-    private static int $idCounter = 0;
+    protected static int $idCounter = 0;
 
     /**
      * @return string Syntax type — 'container' allows nested markup
@@ -121,7 +132,7 @@ class syntax_plugin_searchtablejs extends \dokuwiki\Extension\SyntaxPlugin
             case DOKU_LEXER_EXIT:
                 return [$state, ''];
         }
-        return [];
+        return [$state, ''];
     }
 
     /**
@@ -157,10 +168,12 @@ class syntax_plugin_searchtablejs extends \dokuwiki\Extension\SyntaxPlugin
 
             case DOKU_LEXER_UNMATCHED:
                 // Dispatch the inner content's instructions onto the active
-                // renderer. This is the same pattern sortablejs uses; it keeps
-                // cellbg's $renderer->doc inspection working when searchtable
-                // wraps a sortable wraps colored cells.
-                $instructions = p_get_instructions($match);
+                // renderer. Slice off the wrapping document_start (index 0) and
+                // document_end (index -1) that p_get_instructions() always
+                // prepends/appends: replaying them onto the live renderer would
+                // prematurely flush the footnotes <div> and drain section-edit
+                // markers mid-page (mirrors the fix in the sortablejs sibling).
+                $instructions = array_slice(p_get_instructions($match), 1, -1);
                 foreach ($instructions as $instruction) {
                     call_user_func_array([$renderer, $instruction[0]], $instruction[1]);
                 }

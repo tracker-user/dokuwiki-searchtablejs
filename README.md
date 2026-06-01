@@ -40,8 +40,11 @@ Original plugin: [github.com/xdreamer/searchtablejs](https://github.com/xdreamer
 | `syntax.php`: tag attributes escaped with `hsc()` | Fixes a stored XSS: an editor could inject event handlers by writing `<searchtable " onmouseover="alert(1)>`. |
 | Base class updated to `\dokuwiki\Extension\SyntaxPlugin` | Uses the modern namespaced form instead of the `DokuWiki_Syntax_Plugin` legacy alias. |
 | Return types and parameter types added to all public methods | PHP 8.3 style; aids static analysis. |
-| Static `$idCounter` replaces `mt_rand()` for container IDs | Deterministic, no collision risk; IDs are now `searchtable_1`, `searchtable_2`, etc. |
+| Static `$idCounter` replaces `mt_rand()` for container IDs; promoted to `protected` | Deterministic, no collision risk; IDs are now `searchtable_1`, `searchtable_2`, etc. `protected` follows DokuWiki convention for subclassability. |
 | `lang/` directory added (en, de, ru, ja) | "Filter:" and "Reset" labels are now translatable via `$this->getLang()`. |
+| UNMATCHED branch slices `document_start`/`document_end` from `p_get_instructions()` replay | Without this, replaying those instructions onto the live page renderer prematurely flushed the footnotes `<div>` and drained section-edit markers whenever non-table text appeared inside `<searchtable>` on a page with prior footnotes or multiple sections (duplicate IDs, misplaced markup). Mirrors the fix applied to the `sortablejs` sibling. |
+| `handle()` fallback returns `[$state, '']` instead of `[]` | Avoids undefined-index warnings if an unexpected lexer state is ever passed. |
+| `script.js`: `stripTags(innerHTML)` replaced with native `.textContent` | Faster, avoids manual regex, and correctly decodes HTML entities in cell text. |
 
 ## Install
 
